@@ -1,0 +1,29 @@
+{
+  "realm": "reto",
+  "enabled": true,
+  "sslRequired": "none",
+  "accessTokenLifespan": 3600,
+  "clients": [
+    {
+      "clientId": "reto-client",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": false
+    }
+  ],
+  "users": [
+    {
+      "username": "erick",
+      "enabled": true,
+      "email": "erick@reto.com",
+      "emailVerified": true,
+      "firstName": "Erick",
+      "lastName": "Cotito",
+      "credentials": [
+        { "type": "password", "value": "erick123", "temporary": false }
+      ]
+    }
+  ]
+}

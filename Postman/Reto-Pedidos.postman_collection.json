@@ -1,0 +1,538 @@
+{
+  "info": {
+    "_postman_id": "46ae36e2-f198-44c9-8527-75909d9d124e",
+    "name": "Reto-Pedidos",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53500452",
+    "_collection_link": "https://go.postman.co/collection/53500452-46ae36e2-f198-44c9-8527-75909d9d124e?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Obtener Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  " pm.test(\"200\", () => pm.response.to.have.status(200));\r\n    pm.collectionVariables.set(\"token\", pm.response.json().access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                },
+                {
+                  "key": "client_id",
+                  "value": "reto-client"
+                },
+                {
+                  "key": "username",
+                  "value": "erick"
+                },
+                {
+                  "key": "password",
+                  "value": "erick123"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloakUrl}}/realms/reto/protocol/openid-connect/token",
+              "host": ["{{keycloakUrl}}"],
+              "path": ["realms", "reto", "protocol", "openid-connect", "token"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Inventory",
+      "item": [
+        {
+          "name": "Listar Productos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 y lista\", () => {\r\n  pm.response.to.have.status(200);\r\n  pm.expect(pm.response.json()).to.be.an(\"array\").that.is.not.empty;\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Product por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 y tiene id\", () => {\r\n  pm.response.to.have.status(200);\r\n  pm.expect(pm.response.json().id).to.eql(1);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Disponibilidad",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 y disponible\", () => {\r\n  pm.response.to.have.status(200);\r\n  pm.expect(pm.response.json().available).to.eql(true);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/1/availability?quantity=2",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "1", "availability"],
+              "query": [
+                {
+                  "key": "quantity",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Producto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 creado\", () => {\r\n  pm.response.to.have.status(201);\r\n  pm.expect(pm.response.json().name).to.eql(\"Monitor\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"Monitor\", \"stock\": 15, \"price\": 599.90 }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Crear pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 y CONFIRMED\", () => {\r\n  pm.response.to.have.status(201);\r\n  const body = pm.response.json();\r\n  pm.expect(body.status).to.eql(\"CONFIRMED\");\r\n  pm.collectionVariables.set(\"orderId\", body.id);\r\n});\r\npm.test(\"Trae X-Trace-Id\", () => {\r\n  pm.expect(pm.response.headers.get(\"X-Trace-Id\")).to.be.ok;\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"customerName\": \"Erick\", \"productId\": 1, \"quantity\": 1 }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear pedido con X-Trace-Id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "  pm.test(\"Devuelve el mismo X-Trace-Id\", () => {\r\n    pm.response.to.have.status(201);\r\n    pm.expect(pm.response.headers.get(\"X-Trace-Id\")).to.eql(\"mi-trace-123\");\r\n  });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Trace-Id",
+                "value": "mi-trace-123"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"customerName\": \"Erick\", \"productId\": 1, \"quantity\": 1 }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultar pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 y mismo id\", () => {\r\n  pm.response.to.have.status(200);\r\n  pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"orderId\")));\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "{{orderId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Historial del pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 y tiene historial\", () => {\r\n  pm.response.to.have.status(200);\r\n  pm.expect(pm.response.json()).to.be.an(\"array\").that.is.not.empty;\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "{{orderId}}", "history"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancelar pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 y CANCELLED\", () => {\r\n  pm.response.to.have.status(200);\r\n  pm.expect(pm.response.json().status).to.eql(\"CANCELLED\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "{{orderId}}", "cancel"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Errores",
+      "item": [
+        {
+          "name": "Sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado y code correctos\", () => {\r\n  pm.response.to.have.status(401);              // cambia según la tabla\r\n  const b = pm.response.json();\r\n  pm.expect(b.code).to.eql(\"TOKEN_INVALID_OR_EXPIRED\");  // cambia según la tabla\r\n  pm.expect(b).to.have.all.keys(\"timestamp\", \"status\", \"code\", \"message\", \"traceId\");\r\n  pm.expect(b.traceId).to.be.ok;\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Pedido inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado y code correctos\", () => {\r\n  pm.response.to.have.status(404);              // cambia según la tabla\r\n  const b = pm.response.json();\r\n  pm.expect(b.code).to.eql(\"TOKEN_INVALID_OR_EXPIRED\");  // cambia según la tabla\r\n  pm.expect(b).to.have.all.keys(\"timestamp\", \"status\", \"code\", \"message\", \"traceId\");\r\n  pm.expect(b.traceId).to.be.ok;\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/99999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "99999"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Datos inválidos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado y code correctos\", () => {\r\n  pm.response.to.have.status(400);              // cambia según la tabla\r\n  const b = pm.response.json();\r\n  pm.expect(b.code).to.eql(\"TOKEN_INVALID_OR_EXPIRED\");  // cambia según la tabla\r\n  pm.expect(b).to.have.all.keys(\"timestamp\", \"status\", \"code\", \"message\", \"traceId\");\r\n  pm.expect(b.traceId).to.be.ok;\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"customerName\": \"Erick\", \"productId\": 1, \"quantity\": -1 }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Stock insuficiente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado y code correctos\", () => {\r\n  pm.response.to.have.status(409);              // cambia según la tabla\r\n  const b = pm.response.json();\r\n  pm.expect(b.code).to.eql(\"TOKEN_INVALID_OR_EXPIRED\");  // cambia según la tabla\r\n  pm.expect(b).to.have.all.keys(\"timestamp\", \"status\", \"code\", \"message\", \"traceId\");\r\n  pm.expect(b.traceId).to.be.ok;\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"customerName\": \"Erick\", \"productId\": 1, \"quantity\": 99999 }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Producto inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado y code correctos\", () => {\r\n  pm.response.to.have.status(404);              // cambia según la tabla\r\n  const b = pm.response.json();\r\n  pm.expect(b.code).to.eql(\"TOKEN_INVALID_OR_EXPIRED\");  // cambia según la tabla\r\n  pm.expect(b).to.have.all.keys(\"timestamp\", \"status\", \"code\", \"message\", \"traceId\");\r\n  pm.expect(b.traceId).to.be.ok;\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"customerName\": \"Erick\", \"productId\": 9999, \"quantity\": 1 }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancelación duplicada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Estado y code correctos\", () => {\r\n  pm.response.to.have.status(409);              // cambia según la tabla\r\n  const b = pm.response.json();\r\n  pm.expect(b.code).to.eql(\"TOKEN_INVALID_OR_EXPIRED\");  // cambia según la tabla\r\n  pm.expect(b).to.have.all.keys(\"timestamp\", \"status\", \"code\", \"message\", \"traceId\");\r\n  pm.expect(b.traceId).to.be.ok;\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "orders", "{{orderId}}", "cancel"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "keycloakUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:9000"
+    }
+  ]
+}
